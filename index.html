@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MediPulse - Smart Medicine Reminder & Daily Activity Tracker</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2563eb">
+  <meta name="description" content="Intelligent medicine reminder, persistent beep alarm, smart inventory stock tracker, and daily step pedometer wellness companion.">
+  <link rel="apple-touch-icon" href="icon-192.png">
+</head>
+<body>
+
+  <!-- =========================================================================
+       PATIENT REGISTRATION & LOGIN GATE (REQUIRED BEFORE ENTERING WEBSITE)
+       ========================================================================= -->
+  <div id="auth-gate-screen">
+    <div class="auth-card">
+      <div class="auth-brand-badge">
+        <div class="auth-badge-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/>
+            <path d="m8.5 8.5 7 7"/>
+          </svg>
+        </div>
+        <div>
+          <h2 class="auth-title">Welcome to MediPulse</h2>
+          <p class="auth-subtitle">Patient Setup & Secure Sign-In Portal</p>
+        </div>
+      </div>
+
+      <div class="auth-notice">
+        <strong>🔒 Privacy First:</strong> Please provide your patient information below before entering. This ensures medication doses, stock refill notifications, emergency alerts, and audible reminder beeps are customized for you.
+      </div>
+
+      <form id="form-patient-auth" onsubmit="app.handleAuthLogin(event)">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Full Name *</label>
+            <input type="text" class="form-input" id="auth-name" placeholder="e.g. John Smith" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Age (Years) *</label>
+            <input type="number" class="form-input" id="auth-age" min="1" max="120" placeholder="e.g. 58" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Gender *</label>
+            <select class="form-select" id="auth-gender" required>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other / Prefer not to say</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Blood Group *</label>
+            <select class="form-select" id="auth-blood" required>
+              <option value="O+">O Positive (O+)</option>
+              <option value="O-">O Negative (O-)</option>
+              <option value="A+">A Positive (A+)</option>
+              <option value="A-">A Negative (A-)</option>
+              <option value="B+">B Positive (B+)</option>
+              <option value="B-">B Negative (B-)</option>
+              <option value="AB+">AB Positive (AB+)</option>
+              <option value="AB-">AB Negative (AB-)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Residential Address & City *</label>
+          <input type="text" class="form-input" id="auth-address" placeholder="e.g. 742 Evergreen Terrace, Springfield" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Patient Phone Number *</label>
+            <input type="tel" class="form-input" id="auth-phone" placeholder="e.g. +1 555-0142" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Emergency Caregiver Contact & Phone *</label>
+            <input type="text" class="form-input" id="auth-ice" placeholder="e.g. Mary Smith (Wife) - +1 555-0199" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Known Drug Allergies / Conditions (Optional)</label>
+          <input type="text" class="form-input" id="auth-allergies" placeholder="e.g. Penicillin, Peanuts, Hypertension">
+        </div>
+
+        <div style="display: flex; gap: 12px; margin-top: 24px; align-items: center;">
+          <button type="submit" class="btn btn-primary btn-lg" style="flex: 1;">
+            Sign In & Enter MediPulse ➔
+          </button>
+          <button type="button" class="btn btn-outline" id="btn-quick-fill-demo" title="Auto-fill sample data">
+            ⚡ Quick Demo Fill
+          </button>
+        </div>
+
+        <div style="text-align: center; margin-top: 22px; padding-top: 16px; border-top: 1px dashed var(--border-color); font-size: 0.9rem; color: var(--text-muted); font-weight: 600; letter-spacing: 0.03em;">
+          ✨ Developed by Kamesh
+        </div>
+      </form>
+    </div>
+    <div style="margin-top: 16px; text-align: center; font-size: 0.85rem; color: rgba(255, 255, 255, 0.75); font-weight: 600; letter-spacing: 0.04em;">
+      Developed by Kamesh
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MAIN APPLICATION WORKSPACE (UNLOCKED AFTER LOGIN)
+       ========================================================================= -->
+  <div class="app-container" id="main-app-container" style="display: none;">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/>
+            <path d="m8.5 8.5 7 7"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="brand-title">MediPulse</h1>
+          <span class="brand-subtitle">Smart Health Hub</span>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <a class="nav-item active" data-tab="dashboard">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect width="7" height="9" x="3" y="3" rx="1"/>
+            <rect width="7" height="5" x="14" y="3" rx="1"/>
+            <rect width="7" height="9" x="14" y="12" rx="1"/>
+            <rect width="7" height="5" x="3" y="16" rx="1"/>
+          </svg>
+          <span>Dashboard</span>
+        </a>
+
+        <a class="nav-item" data-tab="schedule">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+          <span>Today's Schedule</span>
+          <span class="nav-badge" id="badge-due-count" style="display: none;">0</span>
+        </a>
+
+        <a class="nav-item" data-tab="inventory">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="m7.5 4.27 9 5.15"/>
+            <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
+            <path d="m3.3 7 8.7 5 8.7-5"/>
+            <path d="M12 22V12"/>
+          </svg>
+          <span>Medicine Stock</span>
+          <span class="nav-badge warning" id="badge-low-stock" style="display: none;">0</span>
+        </a>
+
+        <a class="nav-item" data-tab="activity">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M13 4v16"/>
+            <path d="M17 8v8"/>
+            <path d="M21 10v4"/>
+            <path d="M9 2v20"/>
+            <path d="M5 6v12"/>
+            <path d="M1 9v6"/>
+          </svg>
+          <span>Daily Steps & Activity</span>
+        </a>
+
+        <a class="nav-item" data-tab="vitals">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+          </svg>
+          <span>Vitals & Hydration</span>
+        </a>
+
+        <a class="nav-item" data-tab="doctor-summary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10 9 9 9 8 9"/>
+          </svg>
+          <span>Doctor / RX Report</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="patient-mini-card">
+          <div class="patient-header-row">
+            <div class="patient-avatar" id="avatar-initials">JS</div>
+            <div class="patient-info">
+              <h4 id="user-profile-name">John Smith</h4>
+              <p id="user-profile-meta">Age: 58 • Blood: O+</p>
+            </div>
+          </div>
+          <div class="patient-address-snippet" id="user-profile-address">
+            📍 742 Evergreen Terrace, Springfield
+          </div>
+          <button class="logout-link-btn" onclick="app.handleLogout()">
+            🚪 Log Out / Switch Account
+          </button>
+          <div style="text-align: center; font-size: 0.74rem; color: var(--text-muted); font-weight: 600; margin-top: 4px; border-top: 1px dashed var(--border-color); padding-top: 6px;">
+            ✨ Developed by Kamesh
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Wrapper -->
+    <main class="main-wrapper">
+      <!-- Top Sticky Header -->
+      <header class="top-header">
+        <div class="header-left">
+          <button class="menu-toggle-btn" id="menu-toggle" aria-label="Toggle Navigation">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </button>
+          <div class="header-title-block">
+            <h2 id="current-view-title">Dashboard Overview</h2>
+            <p id="current-date-display">Today, Loading date...</p>
+          </div>
+        </div>
+
+        <div class="header-right">
+          <!-- Add to Shortcut / Install Button -->
+          <button class="btn-shortcut-install" id="btn-install-shortcut" title="Add MediPulse to Desktop or Phone Homescreen Shortcut">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            <span>+ Add to Shortcut</span>
+          </button>
+
+          <!-- Real-time Live Clock -->
+          <div class="live-time-chip">
+            <span class="pulse-dot"></span>
+            <span id="live-time-text">12:00:00 PM</span>
+          </div>
+
+          <!-- Sound Alarm Toggle (Beeps & Chimes) -->
+          <button class="icon-btn active-sound" id="btn-toggle-sound" title="Toggle Beep & Alarm Sound Effects" aria-label="Sound Toggle">
+            <svg id="icon-sound-on" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+            </svg>
+          </button>
+
+          <!-- Voice Announcement Toggle -->
+          <button class="icon-btn" id="btn-toggle-voice" title="Toggle Voice Announcement Reminders" aria-label="Voice Toggle">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+              <line x1="12" y1="19" x2="12" y2="22"/>
+            </svg>
+          </button>
+
+          <!-- Senior / Accessibility High-Contrast Toggle -->
+          <button class="icon-btn" id="btn-toggle-senior" title="Senior Mode (Large Text & High Contrast)" aria-label="Senior Mode">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="m4.93 4.93 14.14 14.14"></path>
+            </svg>
+          </button>
+
+          <!-- Theme Dark/Light Toggle -->
+          <button class="icon-btn" id="btn-toggle-theme" title="Toggle Dark / Light Mode" aria-label="Dark Mode Toggle">
+            <svg id="theme-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+          </button>
+
+          <!-- Add Quick Action Button -->
+          <button class="btn btn-primary" id="btn-open-add-med">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span>Add Medicine</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Main Body Container -->
+      <div class="content-area">
+
+        <!-- ==========================================
+             VIEW 1: DASHBOARD
+             ========================================== -->
+        <section class="tab-pane active" id="view-dashboard">
+          
+          <!-- Key Metrics 4-Col Grid -->
+          <div class="dashboard-grid">
+            
+            <div class="card stat-card">
+              <div class="stat-top">
+                <div>
+                  <div class="stat-value" id="dash-stat-adherence">100%</div>
+                  <div class="stat-label">Today's Adherence</div>
+                </div>
+                <div class="stat-icon blue">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                  </svg>
+                </div>
+              </div>
+              <div class="stat-footer">
+                <span id="dash-streak-count">🔥 7-Day Adherence Streak</span>
+              </div>
+            </div>
+
+            <div class="card stat-card">
+              <div class="stat-top">
+                <div>
+                  <div class="stat-value" id="dash-stat-doses-taken">0 / 0</div>
+                  <div class="stat-label">Doses Taken Today</div>
+                </div>
+                <div class="stat-icon green">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="stat-footer">
+                <span id="dash-doses-remaining-text">0 doses remaining</span>
+              </div>
+            </div>
+
+            <div class="card stat-card">
+              <div class="stat-top">
+                <div>
+                  <div class="stat-value" id="dash-stat-steps">0</div>
+                  <div class="stat-label">Daily Steps Walked</div>
+                </div>
+                <div class="stat-icon amber">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M13 4v16M17 8v8M21 10v4M9 2v20M5 6v12M1 9v6"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="stat-footer">
+                <span id="dash-step-percent">0% of 10,000 goal</span>
+              </div>
+            </div>
+
+            <div class="card stat-card">
+              <div class="stat-top">
+                <div>
+                  <div class="stat-value" id="dash-stat-low-stock">0</div>
+                  <div class="stat-label">Low Stock Alerts</div>
+                </div>
+                <div class="stat-icon rose">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="stat-footer">
+                <span id="dash-stock-summary">All stocks adequate</span>
+              </div>
+            </div>
+
+            <!-- Hero Upcoming Medicine Banner -->
+            <div class="card next-dose-banner" id="hero-dose-card">
+              <div class="banner-content">
+                <div class="banner-left">
+                  <div class="banner-tag">
+                    <span class="pulse-dot"></span> Next Scheduled Dose
+                  </div>
+                  <h3 class="banner-med-title" id="hero-med-name">No Upcoming Doses Today</h3>
+                  <div class="banner-med-meta" id="hero-med-meta">
+                    <span id="hero-med-dosage">Dosage: --</span>
+                    <span id="hero-med-time">Scheduled: --</span>
+                    <span id="hero-med-food">Instructions: --</span>
+                    <span id="hero-med-stock">Remaining Stock: --</span>
+                  </div>
+                </div>
+
+                <div class="banner-countdown">
+                  <div class="countdown-num" id="hero-countdown-timer">--:--</div>
+                  <div class="countdown-label">Time Remaining</div>
+                </div>
+              </div>
+
+              <div class="banner-actions" id="hero-action-buttons">
+                <button class="btn btn-white" id="btn-hero-take">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                  Mark Taken (Decrements Stock)
+                </button>
+                <button class="btn btn-outline" style="color: #fff; border-color: rgba(255,255,255,0.4);" id="btn-hero-snooze">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                  Snooze 10 Mins
+                </button>
+                <button class="btn btn-outline" style="color: #fff; border-color: rgba(255,255,255,0.4);" id="btn-hero-skip">
+                  Skip
+                </button>
+                <button class="btn btn-warning" id="btn-test-urgent-beep" title="Test Urgent Reminder Beep Alarm">
+                  🔊 Test Beep Alarm
+                </button>
+              </div>
+            </div>
+
+            <!-- Pedometer Mini Snapshot Card -->
+            <div class="card pedometer-mini-card">
+              <div class="card-header">
+                <div class="card-title">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M13 4v16M17 8v8M21 10v4M9 2v20M5 6v12M1 9v6"/>
+                  </svg>
+                  Daily Walk Tracker
+                </div>
+                <a href="javascript:void(0)" class="btn btn-sm btn-outline" onclick="app.switchTab('activity')">View Hub</a>
+              </div>
+
+              <div class="steps-circle-container">
+                <svg viewBox="0 0 36 36" class="circular-chart">
+                  <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                  <path class="circle-progress" id="dash-circle-progress" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                </svg>
+                <div class="circle-text-center">
+                  <div class="center-step-count" id="dash-mini-step-text">0</div>
+                  <div class="center-step-goal" id="dash-mini-step-goal">Goal: 10,000</div>
+                </div>
+              </div>
+
+              <div class="step-mini-stats">
+                <div>
+                  <div class="mini-stat-val" id="dash-step-dist">0.0 km</div>
+                  <div class="mini-stat-lbl">Distance</div>
+                </div>
+                <div>
+                  <div class="mini-stat-val" id="dash-step-cal">0 kcal</div>
+                  <div class="mini-stat-lbl">Calories</div>
+                </div>
+                <div>
+                  <div class="mini-stat-val" id="dash-step-time">0 min</div>
+                  <div class="mini-stat-lbl">Active Time</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Bottom Row: Today's Timeline Preview & Low Stock Alert Strip -->
+          <div class="dashboard-grid">
+            <div class="card" style="grid-column: span 7;">
+              <div class="card-header">
+                <div class="card-title">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                  Today's Medication Checklist
+                </div>
+                <button class="btn btn-sm btn-outline" onclick="app.switchTab('schedule')">Full Schedule</button>
+              </div>
+
+              <div id="dash-med-timeline-preview">
+                <!-- Dynamically rendered preview items -->
+              </div>
+            </div>
+
+            <div class="card" style="grid-column: span 5;">
+              <div class="card-header">
+                <div class="card-title">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="m7.5 4.27 9 5.15"/>
+                    <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
+                  </svg>
+                  Medicine Inventory Status
+                </div>
+                <button class="btn btn-sm btn-outline" onclick="app.switchTab('inventory')">Manage Stock</button>
+              </div>
+
+              <div id="dash-stock-list-preview">
+                <!-- Dynamically rendered stock bars -->
+              </div>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ==========================================
+             VIEW 2: TODAY'S SCHEDULE & REMINDERS
+             ========================================== -->
+        <section class="tab-pane" id="view-schedule">
+          <div class="card-header" style="margin-bottom: 24px;">
+            <div>
+              <h3 style="font-size: 1.4rem; font-weight: 800;">Today's Medicine Schedule</h3>
+              <p class="card-subtitle">Take your pills on time to keep your body healthy and stock updated automatically.</p>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+              <button class="btn btn-danger-outline" id="btn-test-urgent-beep-schedule">
+                🔊 Test Urgent Beep Sound
+              </button>
+              <button class="btn btn-outline" id="btn-test-alarm">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+                Test Chime Alarm
+              </button>
+              <button class="btn btn-primary" onclick="app.openAddMedicineModal()">
+                + Add Medication
+              </button>
+            </div>
+          </div>
+
+          <div id="full-schedule-container">
+            <!-- Rendered grouped by Morning, Afternoon, Evening, Night -->
+          </div>
+        </section>
+
+        <!-- ==========================================
+             VIEW 3: MEDICINE STOCK INVENTORY
+             ========================================== -->
+        <section class="tab-pane" id="view-inventory">
+          <div class="card-header" style="margin-bottom: 24px;">
+            <div>
+              <h3 style="font-size: 1.4rem; font-weight: 800;">Medicine Stock & Inventory</h3>
+              <p class="card-subtitle">Track remaining pills, get refill alerts before running out, and restock in one click.</p>
+            </div>
+            <div style="display: flex; gap: 10px;">
+              <button class="btn btn-outline" id="btn-export-refill-list">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Export Pharmacy Refill List
+              </button>
+              <button class="btn btn-primary" onclick="app.openAddMedicineModal()">
+                + Add New Medicine
+              </button>
+            </div>
+          </div>
+
+          <div id="stock-alert-banner-container">
+            <!-- Red/Orange low stock alert banners when applicable -->
+          </div>
+
+          <div class="stock-inventory-grid" id="stock-grid-container">
+            <!-- Dynamically populated stock cards -->
+          </div>
+        </section>
+
+        <!-- ==========================================
+             VIEW 4: DAILY STEPS & ACTIVITY TRACKER
+             ========================================== -->
+        <section class="tab-pane" id="view-activity">
+          <div class="card-header" style="margin-bottom: 24px;">
+            <div>
+              <h3 style="font-size: 1.4rem; font-weight: 800;">Daily Steps & Pedometer</h3>
+              <p class="card-subtitle">Walking daily improves circulation, blood pressure, and medication efficacy.</p>
+            </div>
+            <div style="display: flex; gap: 10px;">
+              <button class="btn btn-outline" id="btn-edit-step-goal">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 20h9"/>
+                  <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>
+                </svg>
+                Change Step Goal
+              </button>
+              <button class="btn btn-primary" id="btn-manual-add-steps">
+                + Log Steps Walked
+              </button>
+            </div>
+          </div>
+
+          <!-- Hero Activity Progress Widget -->
+          <div class="activity-hero-card">
+            <div class="ped-circle-big">
+              <svg viewBox="0 0 36 36" class="circular-chart">
+                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                <path class="circle-progress" id="hero-ped-progress" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+              </svg>
+              <div class="ped-big-text">
+                <div class="ped-big-number" id="ped-total-steps">0</div>
+                <div class="ped-big-goal" id="ped-goal-label">Goal: 10,000 steps</div>
+                <div style="font-size: 0.8rem; font-weight: 700; color: var(--success); margin-top: 4px;" id="ped-goal-status">
+                  Keep going!
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div class="activity-metrics-grid">
+                <div class="metric-box">
+                  <div class="metric-box-val" id="ped-metric-dist">0.00</div>
+                  <div class="metric-box-lbl">Kilometers (km)</div>
+                </div>
+                <div class="metric-box">
+                  <div class="metric-box-val" id="ped-metric-cal">0</div>
+                  <div class="metric-box-lbl">Calories Burned (kcal)</div>
+                </div>
+                <div class="metric-box">
+                  <div class="metric-box-val" id="ped-metric-active-time">0</div>
+                  <div class="metric-box-lbl">Active Minutes</div>
+                </div>
+              </div>
+
+              <!-- Quick Log Buttons -->
+              <div style="margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+                <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); margin-right: 6px;">Quick Add:</span>
+                <button class="btn btn-sm btn-outline" onclick="app.addSteps(500)">+500 steps (Short walk)</button>
+                <button class="btn btn-sm btn-outline" onclick="app.addSteps(1000)">+1,000 steps</button>
+                <button class="btn btn-sm btn-outline" onclick="app.addSteps(2500)">+2,500 steps (Brisk walk)</button>
+                <button class="btn btn-sm btn-outline" onclick="app.addSteps(5000)">+5,000 steps</button>
+              </div>
+
+              <!-- Live Walking Simulator / Pedometer Mode -->
+              <div class="walking-sim-bar">
+                <div class="sim-walker-status">
+                  <span class="sim-avatar-animate" id="walker-avatar">🚶</span>
+                  <div>
+                    <h5 style="font-size: 0.95rem; font-weight: 700;" id="sim-status-title">Live Walk Pedometer Simulator</h5>
+                    <p style="font-size: 0.78rem; color: var(--text-muted);" id="sim-status-desc">Turn on during your walk to log steps automatically in real-time.</p>
+                  </div>
+                </div>
+                <button class="btn btn-success" id="btn-toggle-walking-sim">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                  </svg>
+                  <span>Start Walking Mode</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 7-Day Walking Activity Chart & Health Tips -->
+          <div class="dashboard-grid">
+            <div class="card" style="grid-column: span 8;">
+              <div class="card-header">
+                <div class="card-title">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="20" x2="18" y2="10"/>
+                    <line x1="12" y1="20" x2="12" y2="4"/>
+                    <line x1="6" y1="20" x2="6" y2="14"/>
+                  </svg>
+                  7-Day Walking History & Goal Completion
+                </div>
+                <span class="badge" style="background-color: var(--primary-light); color: var(--primary); font-size: 0.75rem; font-weight: 700; padding: 4px 8px; border-radius: var(--radius-sm);">
+                  Weekly Average: <strong id="weekly-avg-steps">0</strong> steps/day
+                </span>
+              </div>
+              <div class="chart-container" id="step-chart-container">
+                <!-- SVG Bar Chart dynamically injected -->
+              </div>
+            </div>
+
+            <div class="card" style="grid-column: span 4;">
+              <div class="card-header">
+                <div class="card-title">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="16" x2="12" y2="12"/>
+                    <line x1="12" y1="8" x2="12.01" y2="8"/>
+                  </svg>
+                  Smart Walking & Health Tips
+                </div>
+              </div>
+              <div style="font-size: 0.86rem; color: var(--text-secondary); display: flex; flex-direction: column; gap: 12px;">
+                <p>💡 <strong>Post-Meal Stroll:</strong> A 15-minute walk after lunch or dinner helps lower blood sugar spikes by up to 22%.</p>
+                <p>💧 <strong>Hydration:</strong> Drink 1 glass of water for every 2,000 steps walked.</p>
+                <p>💊 <strong>Medication Timing:</strong> Take blood pressure medications at regular hours before prolonged vigorous exercise.</p>
+                <p>👟 <strong>Safe Pace:</strong> Maintain a pace where you can comfortably speak without losing breath.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==========================================
+             VIEW 5: HEALTH VITALS & HYDRATION
+             ========================================== -->
+        <section class="tab-pane" id="view-vitals">
+          <div class="card-header" style="margin-bottom: 24px;">
+            <div>
+              <h3 style="font-size: 1.4rem; font-weight: 800;">Health Vitals & Hydration Log</h3>
+              <p class="card-subtitle">Keep an eye on key health numbers alongside your medications.</p>
+            </div>
+            <button class="btn btn-primary" id="btn-open-log-vitals">
+              + Log Current Vitals
+            </button>
+          </div>
+
+          <div class="vitals-grid">
+            <!-- Water Tracker -->
+            <div class="card water-tracker-card">
+              <div class="card-header">
+                <div class="card-title">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+                  </svg>
+                  Daily Water Hydration Tracker
+                </div>
+                <span style="font-size: 0.85rem; font-weight: 700; color: #0284c7;" id="water-intake-label">0 / 8 Glasses (0 ml)</span>
+              </div>
+              <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 12px;">
+                Tap on any glass to mark water consumed. Proper hydration aids medicine absorption.
+              </p>
+
+              <div class="water-glasses-row" id="water-glasses-container">
+                <!-- 8 clickable glass bars -->
+              </div>
+
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px;">
+                <button class="btn btn-sm btn-outline" id="btn-water-minus">- Remove Glass</button>
+                <button class="btn btn-sm btn-primary" id="btn-water-plus">+ Drink 1 Glass (250 ml)</button>
+                <button class="btn btn-sm btn-outline" id="btn-water-reset">Reset</button>
+              </div>
+            </div>
+
+            <!-- Blood Pressure & Heart Rate Cards -->
+            <div class="card" style="grid-column: span 6;">
+              <div class="card-header">
+                <div class="card-title">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+                  </svg>
+                  Latest Health Vitals Readings
+                </div>
+                <span class="badge" style="background-color: var(--success-light); color: var(--success); padding: 4px 10px; border-radius: var(--radius-full); font-size: 0.75rem; font-weight: 700;" id="vitals-status-tag">
+                  Optimal Ranges
+                </span>
+              </div>
+
+              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px;">
+                <div class="metric-box">
+                  <div class="metric-box-val" id="vital-bp-val">120/80</div>
+                  <div class="metric-box-lbl">Blood Pressure (mmHg)</div>
+                </div>
+                <div class="metric-box">
+                  <div class="metric-box-val" id="vital-hr-val">72</div>
+                  <div class="metric-box-lbl">Heart Rate (BPM)</div>
+                </div>
+                <div class="metric-box">
+                  <div class="metric-box-val" id="vital-sugar-val">98</div>
+                  <div class="metric-box-lbl">Blood Glucose (mg/dL)</div>
+                </div>
+              </div>
+
+              <div id="vitals-history-list" style="font-size: 0.85rem; color: var(--text-secondary);">
+                <!-- Logged history items -->
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==========================================
+             VIEW 6: DOCTOR / PRESCRIPTION SUMMARY & EMERGENCY ICE
+             ========================================== -->
+        <section class="tab-pane" id="view-doctor-summary">
+          <div class="card-header" style="margin-bottom: 24px;">
+            <div>
+              <h3 style="font-size: 1.4rem; font-weight: 800;">Doctor & Pharmacy Clinical Summary</h3>
+              <p class="card-subtitle">Printable medication adherence record, stock counts, and emergency medical ID.</p>
+            </div>
+            <div style="display: flex; gap: 10px;">
+              <button class="btn btn-outline" onclick="window.print()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="6 9 6 2 18 2 18 9"/>
+                  <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+                  <rect width="12" height="8" x="6" y="14"/>
+                </svg>
+                Print / Save PDF
+              </button>
+              <button class="btn btn-primary" id="btn-edit-emergency-card">
+                Edit Patient & ICE Info
+              </button>
+            </div>
+          </div>
+
+          <!-- Emergency ICE Medical ID Banner -->
+          <div class="card" style="margin-bottom: 20px; border-left: 6px solid var(--danger);">
+            <div class="card-title" style="color: var(--danger); margin-bottom: 12px;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+              In Case of Emergency (ICE) Medical Identification
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; font-size: 0.9rem;">
+              <div>
+                <span style="color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase;">Patient Name:</span>
+                <div style="font-weight: 700;" id="ice-patient-name">--</div>
+              </div>
+              <div>
+                <span style="color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase;">Blood Type & Age:</span>
+                <div style="font-weight: 700;" id="ice-blood-group">--</div>
+              </div>
+              <div>
+                <span style="color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase;">Residential Address:</span>
+                <div style="font-weight: 700;" id="ice-address">--</div>
+              </div>
+              <div>
+                <span style="color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase;">Known Allergies:</span>
+                <div style="font-weight: 700; color: var(--danger);" id="ice-allergies">--</div>
+              </div>
+              <div>
+                <span style="color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase;">Primary Physician:</span>
+                <div style="font-weight: 700;" id="ice-physician">Dr. Sarah Adams (+1 555-0199)</div>
+              </div>
+              <div>
+                <span style="color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase;">Emergency Caregiver:</span>
+                <div style="font-weight: 700;" id="ice-contact">--</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Printable Clinical Medication Table -->
+          <div class="card">
+            <h4 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 16px;">Active Prescriptions & Stock Audit</h4>
+            <div style="overflow-x: auto;">
+              <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;" id="doc-prescription-table">
+                <thead>
+                  <tr style="border-bottom: 2px solid var(--border-color); color: var(--text-muted);">
+                    <th style="padding: 10px;">Medication</th>
+                    <th style="padding: 10px;">Dosage</th>
+                    <th style="padding: 10px;">Schedule / Times</th>
+                    <th style="padding: 10px;">Instructions</th>
+                    <th style="padding: 10px;">Stock Remaining</th>
+                    <th style="padding: 10px;">Est. Days Left</th>
+                    <th style="padding: 10px;">Refill Status</th>
+                  </tr>
+                </thead>
+                <tbody id="doc-table-body">
+                  <!-- Injected rows -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- ==========================================
+       MODAL 0: ADD TO SHORTCUT GUIDE
+       ========================================== -->
+  <div class="modal-backdrop" id="modal-shortcut-guide">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 style="font-size: 1.2rem; font-weight: 800;">📲 Add MediPulse to Shortcut</h3>
+        <button class="icon-btn" onclick="app.closeModal('modal-shortcut-guide')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <div style="width: 64px; height: 64px; border-radius: var(--radius-md); background: linear-gradient(135deg, var(--primary), #4f46e5); color: #fff; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px var(--primary-glow); margin-bottom: 10px;">
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/>
+              <path d="m8.5 8.5 7 7"/>
+            </svg>
+          </div>
+          <h4>Never Miss a Medicine Dose!</h4>
+          <p style="font-size: 0.85rem; color: var(--text-muted);">Add MediPulse to your Desktop or Mobile Homescreen for instant access & audible beep alerts.</p>
+        </div>
+
+        <div style="background-color: var(--bg-subtle); padding: 14px; border-radius: var(--radius-md); margin-bottom: 14px;">
+          <h5 style="font-size: 0.92rem; font-weight: 700; margin-bottom: 6px;">🖥️ On Desktop (Chrome / Edge / Windows):</h5>
+          <ol style="padding-left: 20px; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6;">
+            <li>Look at the top URL address bar of your browser.</li>
+            <li>Click the <strong>Install / App icon (⊕ or computer screen icon)</strong>.</li>
+            <li>Click <strong>Install</strong> to add a standalone shortcut to your Windows Desktop & Taskbar!</li>
+            <li>Or in Chrome/Edge menu (⋮): Select <strong>"Save and share" > "Install MediPulse"</strong>.</li>
+          </ol>
+        </div>
+
+        <div style="background-color: var(--bg-subtle); padding: 14px; border-radius: var(--radius-md);">
+          <h5 style="font-size: 0.92rem; font-weight: 700; margin-bottom: 6px;">📱 On Mobile (Android / iPhone):</h5>
+          <ol style="padding-left: 20px; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6;">
+            <li>In Chrome on Android: Tap the <strong>⋮ (three dots)</strong> menu and select <strong>"Add to Home screen"</strong>.</li>
+            <li>In Safari on iPhone: Tap the <strong>Share</strong> button (box with arrow) and tap <strong>"Add to Home Screen"</strong>.</li>
+          </ol>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" id="btn-trigger-pwa-prompt">
+          Install Shortcut Now
+        </button>
+        <button type="button" class="btn btn-outline" onclick="app.closeModal('modal-shortcut-guide')">
+          Got It
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL 1: ADD / EDIT MEDICINE
+       ========================================== -->
+  <div class="modal-backdrop" id="modal-add-medicine">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="modal-med-title" style="font-size: 1.15rem; font-weight: 700;">Add New Medication</h3>
+        <button class="icon-btn" onclick="app.closeModal('modal-add-medicine')" aria-label="Close">✕</button>
+      </div>
+      <form id="form-add-medicine" onsubmit="app.handleSaveMedicine(event)">
+        <div class="modal-body">
+          <input type="hidden" id="med-edit-id" value="">
+          
+          <div class="form-group">
+            <label class="form-label">Medicine Name *</label>
+            <input type="text" class="form-input" id="input-med-name" placeholder="e.g., Metformin, Lisinopril, Aspirin" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Dosage & Unit *</label>
+              <input type="text" class="form-input" id="input-med-dosage" placeholder="e.g. 500 mg, 1 tablet" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Form / Type</label>
+              <select class="form-select" id="input-med-form">
+                <option value="Tablet">Tablet 💊</option>
+                <option value="Capsule">Capsule 💊</option>
+                <option value="Syrup">Syrup 🧴</option>
+                <option value="Drops">Eye/Ear Drops 💧</option>
+                <option value="Injection">Injection 💉</option>
+                <option value="Inhaler">Inhaler 💨</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Meal Instruction</label>
+              <select class="form-select" id="input-med-food">
+                <option value="After Food">After Food (Post-meal)</option>
+                <option value="Before Food">Before Food (Pre-meal)</option>
+                <option value="With Food">With Food</option>
+                <option value="Empty Stomach">Empty Stomach</option>
+                <option value="Anytime">Anytime / As Needed</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Category</label>
+              <select class="form-select" id="input-med-category">
+                <option value="General">General / Wellness</option>
+                <option value="Blood Pressure">Blood Pressure / Heart</option>
+                <option value="Diabetes">Diabetes / Blood Sugar</option>
+                <option value="Antibiotic">Antibiotic</option>
+                <option value="Pain Relief">Pain Relief</option>
+                <option value="Vitamin">Vitamin / Supplement</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Scheduled Time(s) of Day</label>
+            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 8px;">
+              <input type="time" class="form-input" id="input-med-time" value="08:00" style="max-width: 140px;">
+              <span style="font-size: 0.8rem; color: var(--text-muted);">(Set dose alert time)</span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Current Stock Count *</label>
+              <input type="number" class="form-input" id="input-med-stock" min="0" value="30" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Low Stock Alert Level *</label>
+              <input type="number" class="form-input" id="input-med-threshold" min="1" value="5" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Color Label Tag</label>
+            <div style="display: flex; gap: 10px;">
+              <label><input type="radio" name="med-color" value="#2563eb" checked> 🔵 Blue</label>
+              <label><input type="radio" name="med-color" value="#10b981"> 🟢 Green</label>
+              <label><input type="radio" name="med-color" value="#8b5cf6"> 🟣 Purple</label>
+              <label><input type="radio" name="med-color" value="#f59e0b"> 🟠 Amber</label>
+              <label><input type="radio" name="med-color" value="#f43f5e"> 🔴 Rose</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="app.closeModal('modal-add-medicine')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Medication</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL 2: REFILL STOCK
+       ========================================== -->
+  <div class="modal-backdrop" id="modal-refill-stock">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 style="font-size: 1.15rem; font-weight: 700;">Refill Medication Stock</h3>
+        <button class="icon-btn" onclick="app.closeModal('modal-refill-stock')">✕</button>
+      </div>
+      <form id="form-refill-stock" onsubmit="app.handleSaveRefill(event)">
+        <div class="modal-body">
+          <input type="hidden" id="refill-med-id" value="">
+          <p style="font-size: 0.95rem; margin-bottom: 14px;" id="refill-modal-med-title">Refilling: --</p>
+          
+          <div class="form-group">
+            <label class="form-label">Pills / Doses to Add</label>
+            <input type="number" class="form-input" id="input-refill-quantity" min="1" value="30" required>
+          </div>
+
+          <div style="display: flex; gap: 8px; margin-top: 10px;">
+            <button type="button" class="btn btn-sm btn-outline" onclick="document.getElementById('input-refill-quantity').value = 10">+10</button>
+            <button type="button" class="btn btn-sm btn-outline" onclick="document.getElementById('input-refill-quantity').value = 30">+30 (1 Month)</button>
+            <button type="button" class="btn btn-sm btn-outline" onclick="document.getElementById('input-refill-quantity').value = 60">+60 (2 Months)</button>
+            <button type="button" class="btn btn-sm btn-outline" onclick="document.getElementById('input-refill-quantity').value = 90">+90 (3 Months)</button>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="app.closeModal('modal-refill-stock')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Confirm Refill</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL 3: MANUAL STEPS LOGGING / EDIT GOAL
+       ========================================== -->
+  <div class="modal-backdrop" id="modal-log-steps">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 style="font-size: 1.15rem; font-weight: 700;">Log Steps & Walking Activity</h3>
+        <button class="icon-btn" onclick="app.closeModal('modal-log-steps')">✕</button>
+      </div>
+      <form id="form-log-steps" onsubmit="app.handleSaveCustomSteps(event)">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Steps Walked to Add</label>
+            <input type="number" class="form-input" id="input-custom-steps" min="1" max="100000" placeholder="e.g. 1500" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Daily Goal (Optional)</label>
+            <input type="number" class="form-input" id="input-step-goal" min="1000" max="50000" value="10000">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="app.closeModal('modal-log-steps')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add Steps</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL 4: LOG VITALS
+       ========================================== -->
+  <div class="modal-backdrop" id="modal-log-vitals">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 style="font-size: 1.15rem; font-weight: 700;">Log Today's Health Vitals</h3>
+        <button class="icon-btn" onclick="app.closeModal('modal-log-vitals')">✕</button>
+      </div>
+      <form id="form-log-vitals" onsubmit="app.handleSaveVitals(event)">
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Systolic BP (mmHg)</label>
+              <input type="number" class="form-input" id="input-bp-sys" min="60" max="250" placeholder="120" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Diastolic BP (mmHg)</label>
+              <input type="number" class="form-input" id="input-bp-dia" min="40" max="150" placeholder="80" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Heart Rate (BPM)</label>
+              <input type="number" class="form-input" id="input-vitals-hr" min="40" max="200" placeholder="72" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Blood Glucose (mg/dL)</label>
+              <input type="number" class="form-input" id="input-vitals-sugar" min="50" max="500" placeholder="95">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="app.closeModal('modal-log-vitals')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Readings</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL 5: EDIT EMERGENCY & PATIENT PROFILE
+       ========================================== -->
+  <div class="modal-backdrop" id="modal-edit-ice">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 style="font-size: 1.15rem; font-weight: 700;">Edit Patient Profile & ICE Info</h3>
+        <button class="icon-btn" onclick="app.closeModal('modal-edit-ice')">✕</button>
+      </div>
+      <form id="form-edit-ice" onsubmit="app.handleSaveIce(event)">
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Patient Full Name</label>
+              <input type="text" class="form-input" id="input-ice-name" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Age & Blood Type</label>
+              <input type="text" class="form-input" id="input-ice-blood" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Residential Address</label>
+            <input type="text" class="form-input" id="input-ice-address" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Known Allergies</label>
+            <input type="text" class="form-input" id="input-ice-allergies">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Primary Physician & Phone</label>
+            <input type="text" class="form-input" id="input-ice-physician">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Emergency Caregiver Contact & Phone</label>
+            <input type="text" class="form-input" id="input-ice-contact">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="app.closeModal('modal-edit-ice')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Update Profile</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       LIVE DOSE ALARM POPUP / TOAST (WITH BEEP SOUND)
+       ========================================== -->
+  <div class="alarm-overlay" id="alarm-toast">
+    <div class="alarm-header">
+      <div class="alarm-bell">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+        </svg>
+      </div>
+      <div>
+        <h4 style="font-size: 1.05rem; font-weight: 800; color: var(--danger);" id="alarm-toast-title">🚨 BEEP ALERT: MEDICINE DUE NOW!</h4>
+        <p style="font-size: 0.78rem; color: var(--text-muted);" id="alarm-toast-time">Do not forget to take your prescribed dose</p>
+      </div>
+    </div>
+    <div style="margin-bottom: 14px;">
+      <h3 style="font-size: 1.3rem; font-weight: 800;" id="alarm-toast-med">Metformin (500mg)</h3>
+      <p style="font-size: 0.88rem; color: var(--text-secondary); margin-top: 4px;" id="alarm-toast-instructions">
+        Take 1 tablet after food. Remaining stock: 24 pills.
+      </p>
+    </div>
+    <div style="display: flex; gap: 8px;">
+      <button class="btn btn-success" style="flex: 1;" id="btn-alarm-take">Take Dose (Stop Beep)</button>
+      <button class="btn btn-outline" id="btn-alarm-snooze">Snooze (10m)</button>
+      <button class="btn btn-outline" onclick="app.dismissAlarm()">Silence</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
